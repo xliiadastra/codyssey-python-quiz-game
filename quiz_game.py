@@ -1,5 +1,6 @@
 """퀴즈 게임 전체 흐름을 관리하는 QuizGame 클래스."""
 
+import json
 from pathlib import Path
 
 from default_quizzes import create_default_quizzes
@@ -16,6 +17,7 @@ class QuizGame:
         self.best_score = None
         self.best_correct = None
         self.best_total = None
+        self.load_state()
 
     @staticmethod
     def read_number(prompt: str, minimum: int, maximum: int) -> int:
@@ -80,10 +82,12 @@ class QuizGame:
                 elif menu_number == 4:
                     self.show_best_score()
                 else:
+                    self.save_state()
                     print("\n게임을 종료합니다. 다음에 또 만나요!")
                     break
         except (KeyboardInterrupt, EOFError):
-            print("\n\n입력이 중단되었습니다. 안전하게 게임을 종료합니다.")
+            print("\n\n입력이 중단되었습니다. 데이터를 저장하고 안전하게 종료합니다.")
+            self.save_state()
 
     def play_quiz(self) -> None:
         """저장된 퀴즈를 모두 출제하고 결과를 보여 준다."""
@@ -119,6 +123,7 @@ class QuizGame:
             self.best_total = total
             print("🎉 새로운 최고 점수입니다!")
 
+        self.save_state()
         print("=" * 40)
 
     def add_quiz(self) -> None:
@@ -133,7 +138,11 @@ class QuizGame:
 
         answer = self.read_number("정답 번호 (1-4): ", 1, Quiz.CHOICE_COUNT)
         self.quizzes.append(Quiz(question, choices, answer))
-        print("\n✅ 퀴즈가 추가되었습니다!")
+
+        if self.save_state():
+            print("\n✅ 퀴즈가 추가되고 저장되었습니다!")
+        else:
+            print("\n⚠️ 퀴즈는 추가되었지만 파일에는 저장하지 못했습니다.")
 
     def list_quizzes(self) -> None:
         """등록된 퀴즈의 번호와 문제를 출력한다."""
@@ -157,3 +166,97 @@ class QuizGame:
             f"\n🏆 최고 점수: {self.best_score}점 "
             f"({self.best_total}문제 중 {self.best_correct}문제 정답)"
         )
+
+    def reset_state(self) -> None:
+        """퀴즈와 점수를 기본 상태로 되돌린다."""
+        self.quizzes = create_default_quizzes()
+        self.best_score = None
+        self.best_correct = None
+        self.best_total = None
+
+    def load_state(self) -> None:
+        """state.json을 읽고, 문제가 있으면 기본 데이터로 복구한다."""
+        if not self.state_path.exists():
+            print("📂 저장된 데이터가 없어 기본 퀴즈로 시작합니다.")
+            self.reset_state()
+            self.save_state()
+            return
+
+        try:
+            with self.state_path.open("r", encoding="utf-8") as file:
+                state = json.load(file)
+
+            if not isinstance(state, dict):
+                raise ValueError("최상위 데이터는 딕셔너리여야 합니다.")
+
+            quiz_data = state.get("quizzes")
+            if not isinstance(quiz_data, list):
+                raise ValueError("quizzes는 리스트여야 합니다.")
+
+            loaded_quizzes = [Quiz.from_dict(item) for item in quiz_data]
+            best_score = state.get("best_score")
+            best_correct = state.get("best_correct")
+            best_total = state.get("best_total")
+            self.validate_score_data(best_score, best_correct, best_total)
+
+            self.quizzes = loaded_quizzes
+            self.best_score = best_score
+            self.best_correct = best_correct
+            self.best_total = best_total
+
+            score_message = (
+                "기록 없음" if self.best_score is None else f"최고 {self.best_score}점"
+            )
+            print(
+                f"📂 저장된 데이터를 불러왔습니다. "
+                f"(퀴즈 {len(self.quizzes)}개, {score_message})"
+            )
+        except (
+            json.JSONDecodeError,
+            UnicodeDecodeError,
+            OSError,
+            TypeError,
+            ValueError,
+        ) as error:
+            print(f"⚠️ 저장 파일을 읽을 수 없습니다: {error}")
+            print("기본 퀴즈 데이터로 복구합니다.")
+            self.reset_state()
+            self.save_state()
+
+    @staticmethod
+    def validate_score_data(best_score, best_correct, best_total) -> None:
+        """JSON에서 읽은 점수 값의 형태와 범위를 검사한다."""
+        values = (best_score, best_correct, best_total)
+        if all(value is None for value in values):
+            return
+
+        if any(
+            not isinstance(value, int) or isinstance(value, bool) for value in values
+        ):
+            raise ValueError("점수 기록은 모두 정수이거나 모두 null이어야 합니다.")
+
+        if not 0 <= best_score <= 100:
+            raise ValueError("최고 점수는 0부터 100 사이여야 합니다.")
+
+        if best_total <= 0 or not 0 <= best_correct <= best_total:
+            raise ValueError("정답 수와 전체 문제 수가 올바르지 않습니다.")
+
+    def save_state(self) -> bool:
+        """현재 퀴즈와 최고 점수를 state.json에 UTF-8로 저장한다."""
+        state = {
+            "quizzes": [quiz.to_dict() for quiz in self.quizzes],
+            "best_score": self.best_score,
+            "best_correct": self.best_correct,
+            "best_total": self.best_total,
+        }
+        temporary_path = self.state_path.with_name(f"{self.state_path.name}.tmp")
+
+        try:
+            with temporary_path.open("w", encoding="utf-8") as file:
+                json.dump(state, file, ensure_ascii=False, indent=4)
+                file.write("\n")
+            temporary_path.replace(self.state_path)
+            return True
+        except OSError as error:
+            print(f"⚠️ 데이터를 저장하지 못했습니다: {error}")
+            return False
