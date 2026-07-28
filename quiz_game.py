@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from default_quizzes import create_default_quizzes
+from quiz import Quiz
 
 
 class QuizGame:
@@ -37,6 +38,15 @@ class QuizGame:
                 continue
 
             return number
+
+    @staticmethod
+    def read_text(prompt: str) -> str:
+        """빈 문자열이 아닌 값을 입력할 때까지 다시 묻는다."""
+        while True:
+            value = input(prompt).strip()
+            if value:
+                return value
+            print("⚠️ 빈 내용은 입력할 수 없습니다. 내용을 입력해 주세요.")
 
     @staticmethod
     def show_menu() -> None:
@@ -105,7 +115,18 @@ class QuizGame:
         print("=" * 40)
 
     def add_quiz(self) -> None:
-        print("\n퀴즈 추가 기능을 준비 중입니다.")
+        """사용자에게 새 퀴즈 정보를 입력받아 목록에 추가한다."""
+        print("\n📌 새로운 퀴즈를 추가합니다.")
+        question = self.read_text("문제를 입력하세요: ")
+        choices = []
+
+        for number in range(1, Quiz.CHOICE_COUNT + 1):
+            choice = self.read_text(f"선택지 {number}: ")
+            choices.append(choice)
+
+        answer = self.read_number("정답 번호 (1-4): ", 1, Quiz.CHOICE_COUNT)
+        self.quizzes.append(Quiz(question, choices, answer))
+        print("\n✅ 퀴즈가 추가되었습니다!")
 
     def list_quizzes(self) -> None:
         print("\n퀴즈 목록 기능을 준비 중입니다.")
