@@ -117,3 +117,6 @@ JSON 복구를 외부 라이브러리 없이 검사합니다.
 - `score.png`: 최고 점수 확인
 - `git-log.png`: `git log --oneline --graph --all` 결과
 
+## 저장소 복제 실습
+
+별도 로컬 폴더에서 저장소를 clone한 뒤 이 문장을 추가하고 push했습니다.
