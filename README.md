@@ -62,6 +62,7 @@ Windows에서 `python3` 명령을 찾지 못하면 `python main.py`를 사용합
 │   ├── test_quiz.py           # Quiz 단위 테스트
 │   └── test_quiz_game.py      # 입력·저장·복구 테스트
 ├── docs/
+│   ├── GIT_PRACTICE.md        # 브랜치·clone·pull 실습 기록
 │   └── screenshots/           # 제출용 실행 화면 이미지
 ├── LEARNING_GUIDE.md          # 빠른 복습과 발표용 설명
 ├── .gitignore
