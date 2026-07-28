@@ -1,0 +1,88 @@
+"""QuizGame의 입력 검증과 파일 저장 테스트."""
+
+import io
+import json
+import tempfile
+import unittest
+from contextlib import redirect_stdout
+from pathlib import Path
+from unittest.mock import patch
+
+from quiz import Quiz
+from quiz_game import QuizGame
+
+
+class QuizGameTest(unittest.TestCase):
+    def create_game(self, directory: str) -> QuizGame:
+        state_path = Path(directory) / "state.json"
+        with redirect_stdout(io.StringIO()):
+            return QuizGame(state_path)
+
+    def test_missing_file_creates_default_state(self):
+        with tempfile.TemporaryDirectory() as directory:
+            state_path = Path(directory) / "state.json"
+            game = self.create_game(directory)
+
+            self.assertGreaterEqual(len(game.quizzes), 5)
+            self.assertTrue(state_path.exists())
+            self.assertIsNone(game.best_score)
+
+    def test_number_input_retries_until_valid(self):
+        fake_inputs = ["", "abc", "9", " 3 "]
+        output = io.StringIO()
+
+        with patch("builtins.input", side_effect=fake_inputs):
+            with redirect_stdout(output):
+                result = QuizGame.read_number("선택: ", 1, 5)
+
+        self.assertEqual(result, 3)
+        self.assertIn("빈 입력", output.getvalue())
+        self.assertIn("잘못된 입력", output.getvalue())
+        self.assertIn("범위를 벗어났습니다", output.getvalue())
+
+    def test_added_quiz_is_loaded_again(self):
+        with tempfile.TemporaryDirectory() as directory:
+            game = self.create_game(directory)
+            inputs = ["새 문제", "보기 1", "보기 2", "보기 3", "보기 4", "2"]
+
+            with patch("builtins.input", side_effect=inputs):
+                with redirect_stdout(io.StringIO()):
+                    game.add_quiz()
+
+            loaded_game = self.create_game(directory)
+            self.assertEqual(loaded_game.quizzes[-1].question, "새 문제")
+            self.assertEqual(loaded_game.quizzes[-1].answer, 2)
+
+    def test_play_updates_and_saves_best_score(self):
+        with tempfile.TemporaryDirectory() as directory:
+            game = self.create_game(directory)
+            game.quizzes = [Quiz("정답은 2번", ["1", "2", "3", "4"], 2)]
+
+            with patch("builtins.input", return_value="2"):
+                with redirect_stdout(io.StringIO()):
+                    game.play_quiz()
+
+            loaded_game = self.create_game(directory)
+            self.assertEqual(loaded_game.best_score, 100)
+            self.assertEqual(loaded_game.best_correct, 1)
+            self.assertEqual(loaded_game.best_total, 1)
+
+    def test_broken_json_recovers_with_default_quizzes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            state_path = Path(directory) / "state.json"
+            state_path.write_text("{ broken json", encoding="utf-8")
+            output = io.StringIO()
+
+            with redirect_stdout(output):
+                game = QuizGame(state_path)
+
+            self.assertGreaterEqual(len(game.quizzes), 5)
+            self.assertIn("기본 퀴즈 데이터로 복구합니다", output.getvalue())
+
+            recovered_state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertEqual(len(recovered_state["quizzes"]), len(game.quizzes))
+
+
+if __name__ == "__main__":
+    unittest.main()
+
