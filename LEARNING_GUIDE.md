@@ -148,8 +148,8 @@ with path.open("w", encoding="utf-8") as file:
 - `ValueError`: `"abc"`를 숫자로 바꾸거나 잘못된 Quiz를 만들 때
 - `JSONDecodeError`: JSON 문법이 깨졌을 때
 - `OSError`: 파일 읽기·쓰기에 실패했을 때
-- `KeyboardInterrupt`: 사용자가 `Ctrl+C`를 눌렀을 때
-- `EOFError`: 입력 스트림이 끝났을 때
+- `KeyboardInterrupt`: 사용자가 `Ctrl+C`를 누르면 저장 후 정상 종료할 때
+- `EOFError`: `Ctrl+D` 또는 입력 스트림의 끝을 상황에 맞게 처리할 때
 
 `try/except`는 오류를 숨기는 문법이 아니라, 예상 가능한 실패에 프로그램이
 어떻게 대응할지 정하는 문법입니다.
@@ -166,6 +166,10 @@ with path.open("w", encoding="utf-8") as file:
 5. JSON에는 `Quiz` 객체를 직접 저장할 수 없어 `dict`로 변환합니다.
 6. `state.json.tmp`에 먼저 쓴 뒤 `state.json`으로 교체해 저장 도중
    중단될 때 원본이 손상될 가능성을 줄였습니다.
+7. macOS/Linux에서는 표준 `readline`을 활성화해 한글도 바이트가 아닌 글자
+   단위로 지웁니다. 지원하지 않는 환경에서는 기본 `input()`으로 동작합니다.
+8. 대화형 터미널의 `Ctrl+D`는 다시 입력받지만, 파이프 입력의 실제 끝까지
+   무한 반복하지 않도록 `sys.stdin.isatty()`로 두 상황을 구분합니다.
 
 ## 5. Git 명령을 설명하는 법
 
@@ -225,4 +229,3 @@ git merge --no-ff feature/quiz-play
 - `git add`와 `git commit`, `git push`의 차이는?
 
 이 여섯 질문에 코드 없이 말로 답할 수 있으면 과제의 핵심을 이해한 것입니다.
-

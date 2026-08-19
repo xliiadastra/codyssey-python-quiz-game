@@ -46,7 +46,10 @@ Windows에서 `python3` 명령을 찾지 못하면 `python main.py`를 사용합
    - 퀴즈를 풀지 않은 상태도 별도로 안내
 5. 안전한 입력과 종료
    - 빈 입력, 문자 입력, 범위 밖 숫자를 안내한 뒤 재입력
-   - `Ctrl+C`와 입력 스트림 종료 시 가능한 데이터를 저장하고 종료
+   - 한글을 입력했다 지워도 글자 단위로 올바르게 편집
+   - `Ctrl+C` 입력 시 가능한 데이터를 저장하고 정상 종료
+   - 터미널의 `Ctrl+D`는 종료하지 않고 현재 입력을 다시 요청
+   - 파이프·파일 입력 자체가 끝난 경우에는 저장 후 정상 종료
    - 저장 파일이 없거나 손상되어도 기본 퀴즈로 실행
 
 ## 파일 구조
@@ -63,6 +66,7 @@ Windows에서 `python3` 명령을 찾지 못하면 `python main.py`를 사용합
 │   └── test_quiz_game.py      # 입력·저장·복구 테스트
 ├── docs/
 │   ├── GIT_PRACTICE.md        # 브랜치·clone·pull 실습 기록
+│   ├── SCREENSHOT_GUIDE.md     # 제출 화면 6장 촬영 순서
 │   └── screenshots/           # 제출용 실행 화면 이미지
 ├── LEARNING_GUIDE.md          # 빠른 복습과 발표용 설명
 ├── .gitignore
@@ -104,14 +108,16 @@ python3 -m unittest discover -s tests -v
 ```
 
 숫자 입력 재시도, 퀴즈 검증, 추가 데이터 재로딩, 최고 점수 저장, 손상된
-JSON 복구를 외부 라이브러리 없이 검사합니다.
+JSON 복구, `Ctrl+C` 안전 종료, 대화형 `Ctrl+D` 차단을 외부 라이브러리 없이
+검사합니다.
 
 ## 제출용 스크린샷
 
-다음 파일명으로 직접 실행 화면을 캡처해 `docs/screenshots`에 넣을 수 있습니다.
+중복 화면을 제외하면 다음 **6장**이면 충분합니다. 메뉴는 기능 화면마다 함께
+나오므로 별도 캡처가 필요하지 않습니다. 자세한 입력 순서는
+`docs/SCREENSHOT_GUIDE.md`에서 확인할 수 있습니다.
 
 - `environment.png`: Python 버전, Git 설정 또는 VS Code 화면
-- `menu.png`: 메인 메뉴
 - `add_quiz.png`: 퀴즈 추가 결과
 - `list.png`: 퀴즈 목록
 - `play.png`: 퀴즈 풀이와 최종 결과

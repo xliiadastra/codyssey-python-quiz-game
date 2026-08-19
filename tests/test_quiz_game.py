@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from quiz import Quiz
 from quiz_game import QuizGame
@@ -39,6 +39,41 @@ class QuizGameTest(unittest.TestCase):
         self.assertIn("빈 입력", output.getvalue())
         self.assertIn("잘못된 입력", output.getvalue())
         self.assertIn("범위를 벗어났습니다", output.getvalue())
+
+    def test_interactive_ctrl_d_is_blocked_and_reprompts(self):
+        output = io.StringIO()
+        terminal_input = Mock()
+        terminal_input.isatty.return_value = True
+
+        with patch("builtins.input", side_effect=[EOFError, " 4 "]):
+            with patch("quiz_game.sys.stdin", terminal_input):
+                with redirect_stdout(output):
+                    result = QuizGame.read_number("선택: ", 1, 5)
+
+        self.assertEqual(result, 4)
+        self.assertIn("Ctrl+D로는 종료할 수 없습니다", output.getvalue())
+
+    def test_noninteractive_eof_is_not_retried_forever(self):
+        piped_input = Mock()
+        piped_input.isatty.return_value = False
+
+        with patch("builtins.input", side_effect=EOFError):
+            with patch("quiz_game.sys.stdin", piped_input):
+                with self.assertRaises(EOFError):
+                    QuizGame.read_input("선택: ")
+
+    def test_ctrl_c_saves_and_exits_normally(self):
+        with tempfile.TemporaryDirectory() as directory:
+            game = self.create_game(directory)
+            output = io.StringIO()
+
+            with patch.object(game, "show_menu"):
+                with patch.object(game, "read_number", side_effect=KeyboardInterrupt):
+                    with redirect_stdout(output):
+                        game.run()
+
+            self.assertIn("정상 종료합니다", output.getvalue())
+            self.assertTrue((Path(directory) / "state.json").exists())
 
     def test_added_quiz_is_loaded_again(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -85,4 +120,3 @@ class QuizGameTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -1,10 +1,18 @@
 """퀴즈 게임 전체 흐름을 관리하는 QuizGame 클래스."""
 
 import json
+import sys
 from pathlib import Path
 
 from default_quizzes import create_default_quizzes
 from quiz import Quiz
+
+# import 자체가 input()에 한글을 글자 단위로 지우는 줄 편집 기능을 연결한다.
+# Windows처럼 readline이 없는 환경에서도 게임은 기본 입력 방식으로 실행된다.
+try:
+    import readline as _readline  # noqa: F401
+except ImportError:
+    _readline = None
 
 
 class QuizGame:
@@ -23,7 +31,7 @@ class QuizGame:
     def read_number(prompt: str, minimum: int, maximum: int) -> int:
         """범위 안의 정수를 입력할 때까지 다시 묻는다."""
         while True:
-            raw_value = input(prompt).strip()
+            raw_value = QuizGame.read_input(prompt).strip()
 
             if not raw_value:
                 print(f"⚠️ 빈 입력입니다. {minimum}-{maximum} 사이의 숫자를 입력하세요.")
@@ -42,10 +50,23 @@ class QuizGame:
             return number
 
     @staticmethod
+    def read_input(prompt: str) -> str:
+        """입력을 받고, 대화형 Ctrl+D는 종료 대신 현재 입력을 다시 묻는다."""
+        while True:
+            try:
+                return input(prompt)
+            except EOFError:
+                # 실제 터미널의 Ctrl+D만 차단한다. 파이프나 파일 입력의 끝은
+                # 상위 run()으로 전달해야 무한 재입력에 빠지지 않는다.
+                if not sys.stdin.isatty():
+                    raise
+                print("\n⚠️ Ctrl+D로는 종료할 수 없습니다. 메뉴에서 5번을 선택하세요.")
+
+    @staticmethod
     def read_text(prompt: str) -> str:
         """빈 문자열이 아닌 값을 입력할 때까지 다시 묻는다."""
         while True:
-            value = input(prompt).strip()
+            value = QuizGame.read_input(prompt).strip()
             if value:
                 return value
             print("⚠️ 빈 내용은 입력할 수 없습니다. 내용을 입력해 주세요.")
@@ -85,8 +106,11 @@ class QuizGame:
                     self.save_state()
                     print("\n게임을 종료합니다. 다음에 또 만나요!")
                     break
-        except (KeyboardInterrupt, EOFError):
-            print("\n\n입력이 중단되었습니다. 데이터를 저장하고 안전하게 종료합니다.")
+        except KeyboardInterrupt:
+            print("\n\nCtrl+C가 입력되었습니다. 데이터를 저장하고 정상 종료합니다.")
+            self.save_state()
+        except EOFError:
+            print("\n\n입력 스트림이 종료되었습니다. 데이터를 저장하고 정상 종료합니다.")
             self.save_state()
 
     def play_quiz(self) -> None:
