@@ -113,16 +113,16 @@ JSON 복구, `Ctrl+C` 안전 종료, 대화형 `Ctrl+D` 차단을 외부 라이�
 
 ## 제출용 스크린샷
 
-중복 화면을 제외하면 다음 **6장**이면 충분합니다. 메뉴는 기능 화면마다 함께
-나오므로 별도 캡처가 필요하지 않습니다. 자세한 입력 순서는
-`docs/SCREENSHOT_GUIDE.md`에서 확인할 수 있습니다.
+제출용 화면 6장과 별도 메뉴 화면 1장을 `docs/screenshots`에 정리했습니다.
+자세한 촬영 순서는 `docs/SCREENSHOT_GUIDE.md`에서 확인할 수 있습니다.
 
-- `environment.png`: Python 버전, Git 설정 또는 VS Code 화면
-- `add_quiz.png`: 퀴즈 추가 결과
-- `list.png`: 퀴즈 목록
-- `play.png`: 퀴즈 풀이와 최종 결과
-- `score.png`: 최고 점수 확인
-- `git-log.png`: `git log --oneline --graph --all` 결과
+- [메인 메뉴](docs/screenshots/menu.png)
+- [퀴즈 추가 결과](docs/screenshots/add_quiz.png)
+- [퀴즈 8개 목록](docs/screenshots/list.png)
+- [8문제 만점 풀이 결과](docs/screenshots/play.png)
+- [재실행 후 최고 점수](docs/screenshots/score.png)
+- [Python 및 Git 개발 환경](docs/screenshots/environment.png)
+- [Git 브랜치와 커밋 그래프](docs/screenshots/git-log.png)
 
 ## 저장소 복제 실습
 
