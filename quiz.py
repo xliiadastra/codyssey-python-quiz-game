@@ -6,7 +6,13 @@ class Quiz:
 
     CHOICE_COUNT = 4
 
-    def __init__(self, question: str, choices: list[str], answer: int):
+    def __init__(
+        self,
+        question: str,
+        choices: list[str],
+        answer: int,
+        hint: str | None = None,
+    ):
         if not isinstance(question, str) or not question.strip():
             raise ValueError("문제는 비어 있지 않은 문자열이어야 합니다.")
 
@@ -26,9 +32,18 @@ class Quiz:
         ):
             raise ValueError("정답은 1부터 4 사이의 정수여야 합니다.")
 
+        if hint is not None and not isinstance(hint, str):
+            raise ValueError("힌트는 문자열이어야 합니다.")
+
+        cleaned_hint = hint.strip() if hint else ""
+        if not cleaned_hint:
+            answer_choice = cleaned_choices[answer - 1]
+            cleaned_hint = f"정답은 '{answer_choice[0]}'(으)로 시작합니다."
+
         self.question = question.strip()
         self.choices = cleaned_choices
         self.answer = answer
+        self.hint = cleaned_hint
 
     def display(self, number: int | None = None) -> None:
         """터미널에 문제와 네 개의 선택지를 출력한다."""
@@ -50,6 +65,7 @@ class Quiz:
             "question": self.question,
             "choices": self.choices,
             "answer": self.answer,
+            "hint": self.hint,
         }
 
     @classmethod
@@ -62,5 +78,5 @@ class Quiz:
             question=data.get("question", ""),
             choices=data.get("choices", []),
             answer=data.get("answer"),
+            hint=data.get("hint"),
         )
-
