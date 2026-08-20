@@ -220,7 +220,7 @@ class QuizGame:
             }
         )
 
-        if self.best_score is None or score > self.best_score:
+        if self.is_new_best(score, correct_count, total):
             self.best_score = score
             self.best_correct = correct_count
             self.best_total = total
@@ -293,6 +293,19 @@ class QuizGame:
             print("✅ 퀴즈를 삭제하고 저장했습니다.")
         else:
             print("⚠️ 퀴즈는 삭제되었지만 파일에는 저장하지 못했습니다.")
+
+    def is_new_best(self, score: int, correct: int, total: int) -> bool:
+        """점수가 같으면 더 많은 정답 수와 문제 수의 기록을 우선한다."""
+        if self.best_score is None:
+            return True
+
+        current_record = (
+            self.best_score,
+            self.best_correct,
+            self.best_total,
+        )
+        new_record = (score, correct, total)
+        return new_record > current_record
 
     def show_best_score(self) -> None:
         """현재까지의 최고 점수와 모든 게임 기록을 출력한다."""
