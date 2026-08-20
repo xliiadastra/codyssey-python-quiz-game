@@ -1,5 +1,9 @@
 # 빠른 학습 가이드
 
+실제 코드 화면을 열어 놓고 설명하는 순서와 예상 질문은
+[`docs/CODE_EXPLANATION_SCENARIO.md`](docs/CODE_EXPLANATION_SCENARIO.md)에
+별도 발표 대본으로 정리되어 있습니다.
+
 ## 1. 이 과제의 진짜 목적
 
 이 과제는 Python 문법을 각각 외우는 것이 아니라 아래 흐름을 혼자 만들고
